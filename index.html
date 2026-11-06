@@ -1,248 +1,360 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AR Group Diesel Fleet Management</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diesel Fleet Management</title>
 
 <style>
+:root{font-family:Arial,sans-serif;color:#172033;background:#f3f6fb}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
-header{background:#142b4a;color:white;padding:18px}
-.container{max-width:1100px;margin:25px auto;padding:15px}
-.card{background:white;padding:20px;margin-bottom:18px;border-radius:12px;box-shadow:0 2px 9px #0001}
-input,select,button{padding:11px;margin:6px 0;width:100%;border:1px solid #cbd5e1;border-radius:6px}
-button{background:#1455a0;color:white;border:0;cursor:pointer;font-weight:bold}
-button.danger{background:#c62828}
+body{margin:0}
+.top{background:#14213d;color:white;padding:18px 22px}
+.wrap{max-width:1150px;margin:22px auto;padding:0 14px}
+.card{background:white;border:1px solid #e3e9f2;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 4px 16px #15213a0a}
+h1{font-size:21px;margin:0 0 6px}
+h2{font-size:18px;margin:0 0 14px}
+h3{font-size:15px;margin:0 0 10px}
+.muted{color:#64748b;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0}
+.stat{background:#edf3ff;border:1px solid #dbe6fa;padding:15px;border-radius:10px}
+.stat strong{font-size:23px;display:block;margin-top:7px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px}
+input,select,button{font:inherit;width:100%;padding:11px;border:1px solid #ccd5e2;border-radius:8px;background:white}
+button{background:#2457d6;color:white;border:0;font-weight:700;cursor:pointer;margin-top:12px}
+button.secondary{background:#e8eefc;color:#2147a5}
+button.danger{background:#b42318}
 button.success{background:#16834a}
-.hidden{display:none}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
-.stat{background:#eaf2ff;padding:15px;border-radius:9px}
-.stat h2{margin:5px 0}
-table{width:100%;border-collapse:collapse;min-width:650px}
-th,td{padding:10px;border:1px solid #ddd;text-align:left}
-th{background:#eaf0f7}
-.tablewrap{overflow-x:auto}
-.small{font-size:13px;color:#64748b}
+.hidden{display:none!important}
+.status{padding:10px;border-radius:8px;background:#eff6ff;margin-top:10px;white-space:pre-wrap}
+.tablewrap{width:100%;overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}
+td,th{padding:10px;border-bottom:1px solid #e7edf5;text-align:left;vertical-align:top}
+th{background:#edf2f8}
+.badge{padding:5px 8px;border-radius:6px;font-size:12px;background:#fff2cc}
+.badge.approved{background:#dcfce7;color:#166534}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+a{color:#2457d6}
+.actions{display:flex;gap:6px;min-width:150px}
+.actions button{margin:0;padding:8px}
+@media(max-width:600px){
+ .top{padding:15px}
+ .card{padding:14px}
+}
 </style>
 </head>
 
 <body>
 
-<header>
-<h2>AR GROUP - DIESEL FLEET MANAGEMENT</h2>
-<p>Bus Diesel Management System</p>
-</header>
+<div class="top">
+<h1>🚌 Diesel Fleet Management</h1>
+<div class="muted" style="color:#cbd5e1">
+30 Bus Fleet · Driver Entry · Photo Verification
+</div>
+</div>
 
-<div class="container">
+<div class="wrap">
 
 <!-- LOGIN -->
-<div id="loginPanel" class="card">
+<div class="card" id="loginCard">
 <h2>Login</h2>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<p id="loginMessage"></p>
+<form id="loginForm">
+<label>Username</label>
+<input name="username" autocomplete="username" required>
+
+<label>Password</label>
+<input name="password" type="password" autocomplete="current-password" required>
+
+<button type="submit">Login</button>
+</form>
+<div id="loginMsg" class="status hidden"></div>
+<div class="muted" style="margin-top:10px">
+Developed By Er. Soham Patole
+</div>
 </div>
 
-<!-- DRIVER -->
-<div id="driverPanel" class="hidden">
+<!-- APPLICATION -->
+<div id="app" class="hidden">
 
 <div class="card">
-<h2>Driver Diesel Entry</h2>
-<button onclick="logout()">Logout</button>
+<div class="grid">
+<div>
+<b id="welcome"></b>
+<div class="muted" id="role"></div>
+</div>
+<div>
+<button class="secondary" id="logout">Logout</button>
+</div>
+</div>
+</div>
 
+<!-- DRIVER PANEL -->
+<div class="card hidden" id="driverPanel">
+<h2>Diesel Filling Entry</h2>
+
+<form id="entryForm" enctype="multipart/form-data">
+
+<div class="grid">
+
+<div>
 <label>Date</label>
-<input type="date" id="date">
+<input type="date" name="entry_date" required>
+</div>
 
-<label>Bus Number</label>
-<input id="bus" placeholder="BUS-01">
+<div>
+<label>Bus</label>
+<select name="bus_id" id="busSelect" required></select>
+</div>
 
+<div>
 <label>Route</label>
-<input id="route" placeholder="Pune-Goa">
+<select name="route_id" id="routeSelect" required></select>
+</div>
 
-<label>Meter KM</label>
-<input type="number" id="km">
+<div>
+<label>Meter Reading (KM)</label>
+<input type="number" name="meter_km" min="1" step="0.1" required>
+</div>
 
-<label>Diesel Litres</label>
-<input type="number" id="litres" step="0.01">
+<div>
+<label>Diesel Quantity (Litres)</label>
+<input type="number" name="litres" min="0.1" step="0.01" required>
+</div>
 
-<label>Diesel Rate</label>
-<input type="number" id="rate" step="0.01">
+<div>
+<label>Diesel Rate (₹/Litre)</label>
+<input type="number" name="rate_per_litre" min="0.1" step="0.01" required>
+</div>
 
-<label>Tank Status</label>
-<select id="tank">
-<option>Full Tank</option>
-<option>Partial Tank</option>
+<div>
+<label>Tank भरला का?</label>
+<select name="full_tank">
+<option value="true">होय – Full tank</option>
+<option value="false">नाही – Partial</option>
 </select>
+</div>
 
-<label>Meter Photo</label>
-<input type="file" id="meterPhoto" accept="image/*">
+<div>
+<label>Meter / Odometer Photo</label>
+<input type="file" name="meter_photo" accept="image/*" capture="environment" required>
+</div>
 
-<label>Diesel Pump Bill Photo</label>
-<input type="file" id="pumpPhoto" accept="image/*">
-
-<button onclick="submitEntry()">Submit Diesel Entry</button>
-<p id="entryMessage"></p>
+<div>
+<label>Pump / Diesel Bill Photo</label>
+<input type="file" name="pump_photo" accept="image/*" capture="environment" required>
 </div>
 
 </div>
 
-<!-- ADMIN -->
-<div id="adminPanel" class="hidden">
+<button type="submit">Submit for Office Approval</button>
+</form>
+
+<div id="entryMsg" class="status hidden"></div>
+
+<p class="muted">
+फोटो स्पष्ट असावेत. Entry submit झाल्यावर ती Office Approval साठी Pending राहील.
+</p>
+</div>
+
+<!-- ADMIN / STAFF PANEL -->
+<div class="hidden" id="adminPanel">
 
 <div class="card">
-<h2>Admin Dashboard</h2>
-<button onclick="loadAdmin()">Refresh Dashboard</button>
-<button onclick="logout()">Logout</button>
+<h2>Admin / Office Dashboard</h2>
+<button class="secondary" id="refresh">Refresh Dashboard</button>
 </div>
 
+<!-- SUMMARY -->
 <div class="card">
-<h3>Fleet Summary</h3>
-<div class="grid" id="summary"></div>
+<h2>Fleet Summary</h2>
+<div id="summary" class="stats"></div>
 </div>
 
+<!-- BUS REPORT -->
 <div class="card">
-<h3>Bus-wise Report</h3>
-<div class="tablewrap" id="busSummary"></div>
+<h2>Bus-wise Report</h2>
+<div id="busSummary" class="tablewrap"></div>
 </div>
 
+<!-- ROUTE REPORT -->
 <div class="card">
-<h3>Route-wise Report</h3>
-<div class="tablewrap" id="routeSummary"></div>
+<h2>Route-wise Report</h2>
+<div id="routeSummary" class="tablewrap"></div>
 </div>
 
+<!-- ENTRY REPORT -->
 <div class="card">
-<h3>Diesel Entries</h3>
-<div class="tablewrap" id="entries"></div>
+<h2>Diesel Entries / Office Approval</h2>
+
+<div class="grid">
+<div>
+<label>Filter Status</label>
+<select id="statusFilter">
+<option value="">All Entries</option>
+<option value="pending">Pending</option>
+<option value="approved">Approved</option>
+<option value="rejected">Rejected</option>
+</select>
+</div>
+</div>
+
+<div id="entries" class="tablewrap"></div>
+</div>
+
+<!-- CREATE USER -->
+<div class="card">
+<h2>Create Driver / Office Staff Login</h2>
+
+<form id="userForm">
+<div class="grid">
+
+<div>
+<label>Username</label>
+<input name="username" required>
+</div>
+
+<div>
+<label>Full Name</label>
+<input name="full_name" required>
+</div>
+
+<div>
+<label>Temporary Password (10+ characters)</label>
+<input name="password" type="password" minlength="10" required>
+</div>
+
+<div>
+<label>Role</label>
+<select name="role">
+<option value="driver">Driver</option>
+<option value="staff">Office Staff</option>
+</select>
+</div>
+
+<div>
+<label>Fixed Bus (Rotation असल्यास blank ठेवा)</label>
+<select name="fixed_bus_id" id="fixedBus">
+<option value="">Rotation / Not fixed</option>
+</select>
 </div>
 
 </div>
+<button type="submit">Create Account</button>
+</form>
+
+<div id="userMsg" class="status hidden"></div>
+</div>
+
+<!-- CREATE BUS -->
+<div class="card">
+<h2>Add New Bus</h2>
+<form id="busForm">
+<label>Bus Number</label>
+<input name="bus_number" placeholder="BUS-31" required>
+<button type="submit">Add Bus</button>
+</form>
+<div id="busMsg" class="status hidden"></div>
+</div>
+
+<!-- CREATE ROUTE -->
+<div class="card">
+<h2>Add New Route</h2>
+<form id="routeForm">
+<label>Route Name</label>
+<input name="route_name" placeholder="Pune-Goa" required>
+<button type="submit">Add Route</button>
+</form>
+<div id="routeMsg" class="status hidden"></div>
+</div>
+
+</div>
+</div>
+
+<div id="globalMsg" class="status hidden"></div>
+
 </div>
 
 <script>
-let token = localStorage.getItem("token") || "";
-let currentRole = "";
+let token = "";
+let me = null;
+let buses = [];
+let routes = [];
 
-async function api(url, options={}) {
-    options.headers = options.headers || {};
-    if(token) options.headers["Authorization"] = "Bearer " + token;
+const $ = id => document.getElementById(id);
 
-    let response = await fetch(url, options);
-    let data = await response.json().catch(() => ({}));
+const api = async (url, opts = {}) => {
+    opts.headers = {
+        ...(opts.headers || {}),
+        Authorization: "Bearer " + token
+    };
 
-    if(!response.ok) {
+    const response = await fetch(url, opts);
+    let data = {};
+
+    try {
+        data = await response.json();
+    } catch (e) {}
+
+    if (!response.ok) {
         throw new Error(data.detail || "Request failed");
     }
+
     return data;
+};
+
+function show(id, on = true) {
+    $(id).classList.toggle("hidden", !on);
 }
 
-function showPanel(role) {
-    document.getElementById("loginPanel").classList.add("hidden");
-    document.getElementById("driverPanel").classList.add("hidden");
-    document.getElementById("adminPanel").classList.add("hidden");
-
-    if(role === "driver") {
-        document.getElementById("driverPanel").classList.remove("hidden");
-    } else {
-        document.getElementById("adminPanel").classList.remove("hidden");
-        loadAdmin();
-    }
+function msg(id, message) {
+    $(id).textContent = message;
+    show(id, true);
 }
 
-async function login() {
-    const message = document.getElementById("loginMessage");
-    message.textContent = "Logging in...";
-
-    try {
-        const body = new URLSearchParams();
-        body.append("username", document.getElementById("username").value);
-        body.append("password", document.getElementById("password").value);
-
-        const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {"Content-Type":"application/x-www-form-urlencoded"},
-            body: body
-        });
-
-        const data = await response.json();
-
-        if(!response.ok) {
-            throw new Error(data.detail || "Login failed");
-        }
-
-        token = data.access_token;
-        localStorage.setItem("token", token);
-
-        const user = await api("/api/me");
-        currentRole = user.role;
-        showPanel(user.role);
-
-    } catch(error) {
-        message.textContent = error.message;
-    }
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+    })[ch]);
 }
 
-function logout() {
-    token = "";
-    currentRole = "";
-    localStorage.removeItem("token");
-
-    document.getElementById("loginPanel").classList.remove("hidden");
-    document.getElementById("driverPanel").classList.add("hidden");
-    document.getElementById("adminPanel").classList.add("hidden");
+function money(value) {
+    return "₹" + Number(value || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
 }
 
-async function submitEntry() {
-    const message = document.getElementById("entryMessage");
-
-    try {
-        const form = new FormData();
-
-        form.append("date", document.getElementById("date").value);
-        form.append("bus_number", document.getElementById("bus").value);
-        form.append("route", document.getElementById("route").value);
-        form.append("meter_km", document.getElementById("km").value);
-        form.append("litres", document.getElementById("litres").value);
-        form.append("rate", document.getElementById("rate").value);
-        form.append("tank_status", document.getElementById("tank").value);
-
-        const meter = document.getElementById("meterPhoto").files[0];
-        const pump = document.getElementById("pumpPhoto").files[0];
-
-        if(!meter || !pump) {
-            throw new Error("Both photos are required");
-        }
-
-        form.append("meter_photo", meter);
-        form.append("pump_photo", pump);
-
-        await api("/api/driver/entries", {
-            method:"POST",
-            body:form
-        });
-
-        message.textContent = "Entry submitted successfully";
-    } catch(error) {
-        message.textContent = error.message;
-    }
+function number(value) {
+    return Number(value || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
 }
 
 function makeTable(headers, rows) {
     let html = "<table><thead><tr>";
 
     headers.forEach(h => {
-        html += "<th>" + h + "</th>";
+        html += "<th>" + escapeHTML(h) + "</th>";
     });
 
     html += "</tr></thead><tbody>";
 
+    if (!rows.length) {
+        html += '<tr><td colspan="' + headers.length + '">No records found</td></tr>';
+    }
+
     rows.forEach(row => {
         html += "<tr>";
+
         row.forEach(cell => {
             html += "<td>" + (cell ?? "") + "</td>";
         });
+
         html += "</tr>";
     });
 
@@ -250,106 +362,308 @@ function makeTable(headers, rows) {
     return html;
 }
 
-async function review(id, status) {
-    try {
-        await api("/api/admin/entries/" + id + "/review", {
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({status:status})
-        });
+function fillSelects() {
+    const busSelect = $("busSelect");
+    const fixedBus = $("fixedBus");
 
-        await loadAdmin();
-    } catch(error) {
-        alert(error.message);
+    busSelect.innerHTML = '<option value="">Select Bus</option>';
+    fixedBus.innerHTML = '<option value="">Rotation / Not fixed</option>';
+
+    buses.forEach(bus => {
+        const label = escapeHTML(bus.bus_number);
+        busSelect.add(new Option(bus.bus_number, bus.id));
+        fixedBus.add(new Option(bus.bus_number, bus.id));
+    });
+
+    const routeSelect = $("routeSelect");
+    routeSelect.innerHTML = '<option value="">Select Route</option>';
+
+    routes.forEach(route => {
+        routeSelect.add(new Option(route.route_name, route.id));
+    });
+
+    if (me && me.fixed_bus_id) {
+        busSelect.value = me.fixed_bus_id;
+        busSelect.disabled = true;
+    } else {
+        busSelect.disabled = false;
     }
 }
+
+async function loadMasterData() {
+    buses = await api("/api/buses");
+    routes = await api("/api/routes");
+    fillSelects();
+}
+
+function openApp() {
+    show("loginCard", false);
+    show("app", true);
+
+    $("welcome").textContent = "नमस्कार, " + me.full_name;
+    $("role").textContent = "Role: " + me.role;
+
+    show("driverPanel", me.role === "driver");
+    show("adminPanel", me.role === "super_admin" || me.role === "staff");
+}
+
+$("loginForm").onsubmit = async function(e) {
+    e.preventDefault();
+
+    msg("loginMsg", "Logging in...");
+
+    try {
+        const form = new FormData(e.target);
+
+        const response = await fetch("/api/login", {
+            method: "POST",
+            body: form
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Login failed");
+        }
+
+        token = data.access_token;
+
+        me = await api("/api/me");
+
+        await loadMasterData();
+
+        openApp();
+
+        if (me.role !== "driver") {
+            await loadAdmin();
+        }
+
+        show("loginMsg", false);
+
+    } catch (error) {
+        msg("loginMsg", error.message);
+    }
+};
+
+$("entryForm").onsubmit = async function(e) {
+    e.preventDefault();
+
+    try {
+        const form = new FormData(e.target);
+
+        await api("/api/diesel-entries", {
+            method: "POST",
+            body: form
+        });
+
+        msg("entryMsg", "Diesel entry submitted successfully. Status: Pending approval.");
+
+        e.target.reset();
+
+        if (me.fixed_bus_id) {
+            $("busSelect").value = me.fixed_bus_id;
+            $("busSelect").disabled = true;
+        }
+
+    } catch (error) {
+        msg("entryMsg", error.message);
+    }
+};
 
 async function loadAdmin() {
     try {
-        const entries = await api("/api/admin/entries");
+        const filter = $("statusFilter").value;
+        let url = "/api/admin/entries";
 
-        let rows = [];
+        if (filter) {
+            url += "?status=" + encodeURIComponent(filter);
+        }
 
-        entries.forEach(e => {
-            let actions = "";
+        const entries = await api(url);
 
-            if(e.status === "pending") {
-                actions =
-                    '<button onclick="review(' + e.id + ',\'approved\')">Approve</button>' +
-                    '<button class="danger" onclick="review(' + e.id + ',\'rejected\')">Reject</button>';
+        const rows = entries.map(e => {
+            const meterUrl = "/uploads/" + encodeURIComponent(e.meter_photo) +
+                "?token=" + encodeURIComponent(token);
+
+            const pumpUrl = "/uploads/" + encodeURIComponent(e.pump_photo) +
+                "?token=" + encodeURIComponent(token);
+
+            let status = '<span class="badge">' + escapeHTML(e.status) + '</span>';
+
+            if (e.status === "approved") {
+                status = '<span class="badge approved">Approved</span>';
+            } else if (e.status === "rejected") {
+                status = '<span class="badge rejected">Rejected</span>';
             }
 
-            rows.push([
-                e.date,
-                e.bus_number,
-                e.route,
-                e.driver_name,
-                e.meter_km,
-                e.litres,
-                e.rate,
-                e.status,
-                actions
-            ]);
+            let action = "";
+
+            if (e.status === "pending") {
+                action =
+                    '<div class="actions">' +
+                    '<button class="success" onclick="reviewEntry(' + Number(e.id) + ',\'approved\')">Approve</button>' +
+                    '<button class="danger" onclick="reviewEntry(' + Number(e.id) + ',\'rejected\')">Reject</button>' +
+                    '</div>';
+            }
+
+            return [
+                escapeHTML(e.entry_date),
+                escapeHTML(e.bus_number),
+                escapeHTML(e.route_name),
+                escapeHTML(e.driver_name),
+                escapeHTML(e.meter_km),
+                escapeHTML(e.litres),
+                '<a target="_blank" rel="noopener" href="' + meterUrl + '">Meter Photo</a> · ' +
+                '<a target="_blank" rel="noopener" href="' + pumpUrl + '">Pump Photo</a>',
+                status + action
+            ];
         });
 
-        document.getElementById("entries").innerHTML =
-            makeTable(
-                ["Date","Bus","Route","Driver","KM","Litres","Rate","Status","Action"],
-                rows
-            );
+        $("entries").innerHTML = makeTable(
+            ["Date","Bus","Route","Driver","KM","Litres","Photos","Status / Action"],
+            rows
+        );
 
         const s = await api("/api/admin/summary");
 
-        const totals = s.status_totals || [];
         let totalLitres = 0;
         let totalCost = 0;
+        let totalEntries = 0;
 
-        totals.forEach(item => {
-            totalLitres += Number(item.total_litres || 0);
-            totalCost += Number(item.total_cost || 0);
+        (s.status_totals || []).forEach(item => {
+            totalLitres += Number(item.litres || 0);
+            totalCost += Number(item.cost || 0);
+            totalEntries += Number(item.n || 0);
         });
 
-        document.getElementById("summary").innerHTML =
-            '<div class="stat"><p>Total Diesel</p><h2>' + totalLitres.toFixed(2) + ' L</h2></div>' +
-            '<div class="stat"><p>Total Expense</p><h2>₹' + totalCost.toFixed(2) + '</h2></div>';
+        const pending = (s.status_totals || []).find(x => x.status === "pending");
+        const approved = (s.status_totals || []).find(x => x.status === "approved");
+        const rejected = (s.status_totals || []).find(x => x.status === "rejected");
 
-        const busRows = (s.bus_totals || []).map(item => [
-            item.bus_number,
-            item.total_litres,
-            item.total_cost
+        $("summary").innerHTML =
+            '<div class="stat">Total Entries<strong>' + totalEntries + '</strong></div>' +
+            '<div class="stat">Total Diesel<strong>' + number(totalLitres) + ' L</strong></div>' +
+            '<div class="stat">Total Expense<strong>' + money(totalCost) + '</strong></div>' +
+            '<div class="stat">Pending<strong>' + Number(pending?.n || 0) + '</strong></div>' +
+            '<div class="stat">Approved<strong>' + Number(approved?.n || 0) + '</strong></div>' +
+            '<div class="stat">Rejected<strong>' + Number(rejected?.n || 0) + '</strong></div>';
+
+        const busRows = (s.bus_totals || []).map(x => [
+            escapeHTML(x.bus_number),
+            Number(x.entries || 0),
+            number(x.litres),
+            money(x.cost)
         ]);
 
-        document.getElementById("busSummary").innerHTML =
-            makeTable(["Bus","Litres","Expense"], busRows);
+        $("busSummary").innerHTML = makeTable(
+            ["Bus Number","Entries","Approved Litres","Approved Expense"],
+            busRows
+        );
 
-        const routeRows = (s.route_totals || []).map(item => [
-            item.route,
-            item.total_litres,
-            item.total_cost
+        const routeRows = (s.route_totals || []).map(x => [
+            escapeHTML(x.route_name),
+            Number(x.entries || 0),
+            number(x.litres),
+            money(x.cost)
         ]);
 
-        document.getElementById("routeSummary").innerHTML =
-            makeTable(["Route","Litres","Expense"], routeRows);
+        $("routeSummary").innerHTML = makeTable(
+            ["Route","Entries","Approved Litres","Approved Expense"],
+            routeRows
+        );
 
-    } catch(error) {
-        document.getElementById("entries").textContent = error.message;
+    } catch (error) {
+        $("entries").textContent = error.message;
+        $("summary").textContent = "Summary load failed: " + error.message;
     }
 }
 
-async function restoreSession() {
-    if(!token) return;
+window.reviewEntry = async function(id, decision) {
+    const form = new FormData();
+
+    form.append("decision", decision);
+    form.append("note", "");
 
     try {
-        const user = await api("/api/me");
-        currentRole = user.role;
-        showPanel(user.role);
-    } catch(error) {
-        logout();
+        await api("/api/admin/entries/" + id + "/review", {
+            method: "POST",
+            body: form
+        });
+
+        await loadAdmin();
+
+    } catch (error) {
+        alert(error.message);
     }
-}
+};
 
-restoreSession();
+$("refresh").onclick = async function() {
+    await loadAdmin();
+};
+
+$("statusFilter").onchange = loadAdmin;
+
+$("userForm").onsubmit = async function(e) {
+    e.preventDefault();
+
+    try {
+        await api("/api/admin/users", {
+            method: "POST",
+            body: new FormData(e.target)
+        });
+
+        msg("userMsg", "Account created successfully.");
+        e.target.reset();
+
+    } catch (error) {
+        msg("userMsg", error.message);
+    }
+};
+
+$("busForm").onsubmit = async function(e) {
+    e.preventDefault();
+
+    try {
+        await api("/api/admin/buses", {
+            method: "POST",
+            body: new FormData(e.target)
+        });
+
+        msg("busMsg", "Bus added successfully.");
+
+        e.target.reset();
+        await loadMasterData();
+
+    } catch (error) {
+        msg("busMsg", error.message);
+    }
+};
+
+$("routeForm").onsubmit = async function(e) {
+    e.preventDefault();
+
+    try {
+        await api("/api/admin/routes", {
+            method: "POST",
+            body: new FormData(e.target)
+        });
+
+        msg("routeMsg", "Route added successfully.");
+
+        e.target.reset();
+        await loadMasterData();
+
+    } catch (error) {
+        msg("routeMsg", error.message);
+    }
+};
+
+$("logout").onclick = function() {
+    token = "";
+    me = null;
+    location.reload();
+};
+
 </script>
-
 </body>
 </html>
