@@ -1,73 +1,70 @@
-<!doctype html>
-<html lang="mr">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Diesel Fleet Management</title>
-<style>
-:root{font-family:Arial,sans-serif;color:#172033;background:#f3f6fb}
-*{box-sizing:border-box}body{margin:0}.top{background:#14213d;color:white;padding:18px 22px}
-.wrap{max-width:1100px;margin:22px auto;padding:0 14px}.card{background:white;border:1px solid #e3e9f2;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 4px 16px #15213a0a}
-h1{font-size:21px;margin:0 0 6px}h2{font-size:18px;margin:0 0 14px}.muted{color:#64748b;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px}
-input,select,button{font:inherit;width:100%;padding:11px;border:1px solid #ccd5e2;border-radius:8px;background:white}
-button{background:#2457d6;color:white;border:0;font-weight:700;cursor:pointer;margin-top:12px}
-button.secondary{background:#e8eefc;color:#2147a5}button.danger{background:#b42318}
-.hidden{display:none}.status{padding:10px;border-radius:8px;background:#eff6ff;margin-top:10px;white-space:pre-wrap}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:9px;border-bottom:1px solid #e7edf5;text-align:left}
-@media(max-width:600px){.top{padding:15px}.card{padding:14px}table{display:block;overflow:auto}}
-</style></head>
-<body>
-<div class="top"><h1>🚌 Diesel Fleet Management</h1><div class="muted" style="color:#cbd5e1">30 Bus Fleet · Driver Entry · Photo Verification</div></div>
-<div class="wrap">
-<div class="card" id="loginCard"><h2>Login</h2>
-<form id="loginForm"><label>Username</label><input name="username" required>
-<label>Password</label><input name="password" type="password" required>
-<button>Login</button></form><div class="muted" style="margin-top:10px">Developed By 
-                                                                         Er. soham Patole .</div>
-</div>
-<div id="app" class="hidden">
-<div class="card"><div class="grid"><div><b id="welcome"></b><div class="muted" id="role"></div></div><div><button class="secondary" id="logout">Logout</button></div></div></div>
-<div class="card hidden" id="driverPanel"><h2>Diesel Filling Entry</h2>
-<form id="entryForm" enctype="multipart/form-data">
-<div class="grid">
-<div><label>Date</label><input type="date" name="entry_date" required></div>
-<div><label>Bus</label><select name="bus_id" id="busSelect" required></select></div>
-<div><label>Route</label><select name="route_id" id="routeSelect" required></select></div>
-<div><label>Meter Reading (KM)</label><input type="number" name="meter_km" min="1" step="0.1" required></div>
-<div><label>Diesel Quantity (Litres)</label><input type="number" name="litres" min="0.1" step="0.01" required></div>
-<div><label>Diesel Rate (₹/Litre)</label><input type="number" name="rate_per_litre" min="0.1" step="0.01" required></div>
-<div><label>Tank भरला का?</label><select name="full_tank"><option value="true">होय – Full tank</option><option value="false">नाही – Partial</option></select></div>
-<div><label>Meter / Odometer Photo (Required)</label><input type="file" name="meter_photo" accept="image/*" capture="environment" required></div>
-<div><label>Pump / Diesel Bill Photo (Required)</label><input type="file" name="pump_photo" accept="image/*" capture="environment" required></div>
-</div><button>Submit for Office Approval</button></form><div id="entryMsg" class="status hidden"></div>
-<p class="muted">फोटो स्पष्ट असावेत. Entry submit झाल्यावर ती office approval साठी Pending राहील.</p>
-</div>
-<div class="card hidden" id="adminPanel"><h2>Admin / Office Review</h2>
-<button class="secondary" id="refresh">Refresh Entries</button><div id="entries"></div>
-<h2 style="margin-top:22px">Fleet Summary</h2><div id="summary"></div>
-<div class="card"><h2>Create Driver / Staff Login</h2>
-<form id="userForm"><div class="grid">
-<div><label>Username</label><input name="username" required></div>
-<div><label>Full Name</label><input name="full_name" required></div>
-<div><label>Temporary Password (10+ chars)</label><input name="password" minlength="10" required></div>
-<div><label>Role</label><select name="role"><option value="driver">Driver</option><option value="staff">Office Staff</option></select></div>
-<div><label>Fixed Bus (Rotation असल्यास blank ठेवा)</label><select name="fixed_bus_id" id="fixedBus"><option value="">Rotation / Not fixed</option></select></div>
-</div><button>Create Account</button></form><div id="userMsg" class="status hidden"></div></div>
-</div></div>
-<div id="globalMsg" class="status hidden"></div>
-</div>
-<script>
-let token=null, me=null, buses=[], routes=[];
-const api=async(url,opts={})=>{opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};const r=await fetch(url,opts);let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.detail||'Request failed');return d};
-function show(id,on=true){document.getElementById(id).classList.toggle('hidden',!on)}
-function msg(id,s){let e=document.getElementById(id);e.textContent=s;show(id,true)}
-document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();try{let f=new FormData(e.target);let r=await fetch('/api/login',{method:'POST',body:f});let d=await r.json();if(!r.ok)throw new Error(d.detail);token=d.access_token;me=await api('/api/me');show('loginCard',false);show('app');document.getElementById('welcome').textContent='नमस्कार, '+me.full_name;document.getElementById('role').textContent='Role: '+me.role;buses=await api('/api/buses');routes=await api('/api/routes');fillSelects();if(me.role==='driver')show('driverPanel');else{show('adminPanel');await loadAdmin()}}catch(x){alert(x.message)}};
-function fillSelects(){for(let id of ['busSelect','fixedBus']){let s=document.getElementById(id);s.innerHTML=id==='fixedBus'?'<option value="">Rotation / Not fixed</option>':'';buses.forEach(b=>s.add(new Option(b.bus_number,b.id)))}let r=document.getElementById('routeSelect');r.innerHTML='';routes.forEach(x=>r.add(new Option(x.route_name,x.id)));if(me.fixed_bus_id)document.getElementById('busSelect').value=me.fixed_bus_id}
-document.getElementById('entryForm').onsubmit=async e=>{e.preventDefault();try{let d=await api('/api/diesel-entries',{method:'POST',body:new FormData(e.target)});msg('entryMsg','Entry submitted. Status: Pending approval.');e.target.reset()}catch(x){msg('entryMsg',x.message)}};
-async function loadAdmin(){let entries=await api('/api/admin/entries');let html='<table><tr><th>Date</th><th>Bus</th><th>Route</th><th>Driver</th><th>KM</th><th>Litres</th><th>Photos</th><th>Status / Action</th></tr>';for(let e of entries){let photos=`<a target="_blank" href="/uploads/${e.meter_photo}?token=${token}">Meter</a> · <a target="_blank" href="/uploads/${e.pump_photo}?token=${token}">Pump</a>`;html+=`<tr><td>${e.entry_date}</td><td>${e.bus_number}</td><td>${e.route_name}</td><td>${e.driver_name}</td><td>${e.meter_km}</td><td>${e.litres}</td><td>${photos}</td><td>${e.status}${e.status==='pending'?`<br><button onclick="review(${e.id},'approved')">Approve</button><button class="danger" onclick="review(${e.id},'rejected')">Reject</button>`:''}</td></tr>`}html+='</table>';document.getElementById('entries').innerHTML=html;let s=await api('/api/admin/summary');document.getElementById('summary').innerHTML='<p>Approved / Pending diesel totals:</p><pre>'+JSON.stringify(s.status_totals,null,2)+'</pre><p>Bus-wise litres and expenses:</p><pre>'+JSON.stringify(s.bus_totals,null,2)+'</pre><p>Route-wise litres and expenses:</p><pre>'+JSON.stringify(s.route_totals,null,2)+'</pre>'}
-window.review=async(id,decision)=>{let f=new FormData();f.append('decision',decision);f.append('note','');try{await api(`/api/admin/entries/${id}/review`,{method:'POST',body:f});await loadAdmin()}catch(e){alert(e.message)}};
-document.getElementById('refresh').onclick=loadAdmin;
-document.getElementById('userForm').onsubmit=async e=>{e.preventDefault();try{await api('/api/admin/users',{method:'POST',body:new FormData(e.target)});msg('userMsg','Account created successfully.');e.target.reset()}catch(x){msg('userMsg',x.message)}};
-document.getElementById('logout').onclick=()=>location.reload();
-</script></body></html>
+
+async function loadAdmin(){
+    let entries = await api('/api/admin/entries');
+
+    let html = '<table><tr><th>Date</th><th>Bus</th><th>Route</th><th>Driver</th><th>KM</th><th>Litres</th><th>Photos</th><th>Status / Action</th></tr>';
+
+    for(let e of entries){
+        let photos = `<a target="_blank" href="/uploads/${e.meter_photo}?token=${token}">Meter</a> · <a target="_blank" href="/uploads/${e.pump_photo}?token=${token}">Pump</a>`;
+
+        html += `<tr>
+        <td>${e.entry_date}</td>
+        <td>${e.bus_number}</td>
+        <td>${e.route_name}</td>
+        <td>${e.driver_name}</td>
+        <td>${e.meter_km}</td>
+        <td>${e.litres}</td>
+        <td>${photos}</td>
+        <td>${e.status}
+        ${e.status==='pending'?`<br>
+        <button onclick="review(${e.id},'approved')">Approve</button>
+        <button class="danger" onclick="review(${e.id},'rejected')">Reject</button>`:''}
+        </td></tr>`;
+    }
+
+    html += '</table>';
+    document.getElementById('entries').innerHTML = html;
+
+    let s = await api('/api/admin/summary');
+
+    let status = s.status_totals || [];
+    let buses = s.bus_totals || [];
+    let routes = s.route_totals || [];
+
+    let totalEntries = status.reduce((a,x)=>a+Number(x.n||0),0);
+    let totalLitres = status.reduce((a,x)=>a+Number(x.litres||0),0);
+    let totalCost = status.reduce((a,x)=>a+Number(x.cost||0),0);
+    let approved = status.filter(x=>x.status==='approved').reduce((a,x)=>a+Number(x.n||0),0);
+    let pending = status.filter(x=>x.status==='pending').reduce((a,x)=>a+Number(x.n||0),0);
+
+    let summaryHTML = `
+    <div class="grid">
+      <div class="card"><h2>${totalEntries}</h2><p>Total Entries</p></div>
+      <div class="card"><h2>${approved}</h2><p>Approved Entries</p></div>
+      <div class="card"><h2>${pending}</h2><p>Pending Entries</p></div>
+      <div class="card"><h2>${totalLitres.toFixed(2)} L</h2><p>Total Diesel</p></div>
+      <div class="card"><h2>₹${totalCost.toLocaleString('en-IN')}</h2><p>Total Expense</p></div>
+    </div>
+
+    <h2>Bus-wise Diesel Summary</h2>
+    <table>
+    <tr><th>Bus</th><th>Entries</th><th>Litres</th><th>Expense</th></tr>
+    ${buses.map(x=>`<tr>
+      <td>${x.bus_number}</td><td>${x.entries||0}</td>
+      <td>${Number(x.litres||0).toFixed(2)}</td>
+      <td>₹${Number(x.cost||0).toLocaleString('en-IN')}</td>
+    </tr>`).join('')}
+    </table>
+
+    <h2 style="margin-top:22px">Route-wise Diesel Summary</h2>
+    <table>
+    <tr><th>Route</th><th>Entries</th><th>Litres</th><th>Expense</th></tr>
+    ${routes.map(x=>`<tr>
+      <td>${x.route_name}</td><td>${x.entries||0}</td>
+      <td>${Number(x.litres||0).toFixed(2)}</td>
+      <td>₹${Number(x.cost||0).toLocaleString('en-IN')}</td>
+    </tr>`).join('')}
+    </table>`;
+
+    document.getElementById('summary').innerHTML = summaryHTML;
+}
